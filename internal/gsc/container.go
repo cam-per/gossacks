@@ -188,6 +188,10 @@ type openedFile struct {
 	sr *io.SectionReader
 }
 
+func (f *openedFile) ReadAt(p []byte, off int64) (n int, err error) {
+	return f.sr.ReadAt(p, off)
+}
+
 func (f *openedFile) Read(p []byte) (int, error) {
 	n, err := f.sr.Read(p)
 	if f.header.Flags > 0 {
@@ -207,9 +211,9 @@ func (container *Container) Open(name string) (fs.File, error) {
 		return nil, os.ErrNotExist
 	}
 	if file.IsDir() {
-		return nil, os.ErrInvalid
+		return &openedFile{entry: file}, nil
 	}
-	sr := io.NewSectionReader(container.r, container.dataOffset+int64(^file.header.Offset), int64(file.header.Size))
+	sr := io.NewSectionReader(container.r, container.dataOffset+int64(file.header.Offset), int64(file.header.Size))
 	return &openedFile{entry: file, sr: sr}, nil
 }
 
@@ -223,6 +227,10 @@ func (container *Container) readFAT() error {
 		return err
 	}
 	container.dataOffset = int64(binary.Size(container.header) + binary.Size(container.fat))
+
+	for i := range container.fat {
+		container.fat[i].Offset = ^container.fat[i].Offset
+	}
 
 	container.fm = map[string]*entry{
 		"/": container.root,
