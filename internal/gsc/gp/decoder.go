@@ -64,6 +64,8 @@ func (decoder *Decoder) decodeFrame(offset int64) (*Frame, int64, error) {
 		CData: int64(h.CData),
 		Dx:    int(h.Dx),
 		Dy:    int(h.Dy),
+		Lx:    int(h.Lx),
+		Ly:    int(h.Ly),
 	}
 
 	return frame, int64(h.Next), nil

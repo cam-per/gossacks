@@ -45,9 +45,9 @@ const (
 )
 
 type Frame struct {
-	Type   FrameType
-	CData  int64
-	Dx, Dy int
+	Type           FrameType
+	CData          int64
+	Dx, Dy, Lx, Ly int
 }
 
 type Sprite struct {
