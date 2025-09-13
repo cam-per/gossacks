@@ -2,7 +2,6 @@ package gp
 
 import (
 	"encoding/binary"
-	"image"
 )
 
 type header struct {
@@ -23,18 +22,38 @@ type frameHeader struct {
 	Lines   int16
 }
 
+func (fh *frameHeader) frameType() FrameType { return FrameType(fh.Options & 0b111111) }
+
+type FrameType uint8
+
+const (
+	StandardFrame      FrameType = 0
+	NationalMaskFrame  FrameType = 1
+	Transparent50Frame FrameType = 3
+	Transparent75Frame FrameType = 4
+	ShadowFrame        FrameType = 5
+	InvalidFrame       FrameType = 0xff
+)
+
+type ImageType uint8
+
+const (
+	ImageInvalid   ImageType = 0
+	ImageGP        ImageType = 1
+	ImageRLC       ImageType = 2
+	ImageShadowRLC ImageType = 3
+)
+
 type Frame struct {
-	header frameHeader
-	image.Paletted
+	Type   FrameType
+	CData  int64
+	Dx, Dy int
 }
 
-type Texture struct{}
-
 type Sprite struct {
-	images image.Paletted
+	frames []*Frame
 }
 
 var (
-	headerSize = uint32(binary.Size(header{}))
-	frameSize  = uint32(binary.Size(frameHeader{}))
+	frameHeaderSize = int64(binary.Size(frameHeader{}))
 )

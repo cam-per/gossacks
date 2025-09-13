@@ -143,7 +143,7 @@ func (e *entry) add(item *entry) {
 	e.m[item.Name()] = item
 }
 
-type ArchiveReader interface {
+type Reader interface {
 	io.Reader
 	io.ReaderAt
 }
@@ -155,14 +155,14 @@ type Container struct {
 		Key        uint16
 		Entries    uint32
 	}
-	r          ArchiveReader
+	r          Reader
 	fat        []header
 	fm         map[string]*entry
 	root       *entry
 	dataOffset int64
 }
 
-func NewContainer(r ArchiveReader) (*Container, error) {
+func NewContainer(r Reader) (*Container, error) {
 	container := &Container{
 		r:    r,
 		root: newDirEntry("/", ""),
@@ -189,7 +189,11 @@ type openedFile struct {
 }
 
 func (f *openedFile) ReadAt(p []byte, off int64) (n int, err error) {
-	return f.sr.ReadAt(p, off)
+	n, err = f.sr.ReadAt(p, off)
+	if err != nil {
+		return
+	}
+	return
 }
 
 func (f *openedFile) Read(p []byte) (int, error) {
@@ -238,6 +242,7 @@ func (container *Container) readFAT() error {
 	for i, v := range container.fat {
 		a := utils.CString(v.Name[:]).Decode(charmap.CodePage866)
 		a = "/" + strings.ReplaceAll(a, "\\", "/")
+		a = strings.ToLower(a)
 		name := path.Base(a)
 		container.createFile(a, newFileEntry(a, name, &container.fat[i]))
 	}
