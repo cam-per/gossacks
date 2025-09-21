@@ -210,6 +210,7 @@ func (f *openedFile) Close() error               { return nil }
 func (f *openedFile) Stat() (fs.FileInfo, error) { return f.entry, nil }
 
 func (container *Container) Open(name string) (fs.File, error) {
+	name = strings.ToLower(name)
 	file, ok := container.fm[name]
 	if !ok {
 		return nil, os.ErrNotExist
